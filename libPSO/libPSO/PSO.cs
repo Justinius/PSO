@@ -4,7 +4,7 @@ using System.Text;
 
 namespace libPSO
 {
-    class PSO
+    public class PSO
     {
         int numDims;
         int numParticles;
@@ -20,8 +20,8 @@ namespace libPSO
         double[] localBestScores;
 
         bool keepHistory;
-        List<double> gBestHistory;
-        List<double[][]> particleHistory;
+        public List<double> gBestHistory;
+        public List<double[][]> particleHistory;
 
         Func<double[], double> goalFunc;
         Random rnd = new Random();
@@ -33,12 +33,16 @@ namespace libPSO
         double w;
         double lWeight;
         double gWeight;
+
+        int maxIters;
+
         
         public PSO(int numDims, int numParticles, 
                    Func<double[], double> goal, 
                    double[] lbounds, double[] ubounds, 
-                   double velocityWeight = .7968, double localBestWeight = 1.4962, double globalBestWeight = 1.4962,
-                   bool keepHistory = false)
+                   int iters,
+                   bool keepHistory = false,
+                   double velocityWeight = .7968, double localBestWeight = 1.4962, double globalBestWeight = 1.4962)
         {
             
             if (numDims <= 0)
@@ -47,12 +51,16 @@ namespace libPSO
             if(numParticles <= 0)
                 throw new ArgumentException("Number of particles should be greather than 0.");
 
+            if (iters <= 0)
+                throw new ArgumentException("Number of iterations should be greather than 0.");
+
             if (lbounds.Length != numDims || ubounds.Length != numDims)
                 throw new ArgumentException("Bounds should have a length of NUMDIMS.");
 
             w = velocityWeight;
             lWeight = localBestWeight;
             gWeight = globalBestWeight;
+            maxIters = iters;
             
             for(int i = 0; i < numDims; i++)
             {
@@ -63,7 +71,7 @@ namespace libPSO
             this.numDims = numDims;
             this.numParticles = numParticles;
             this.lbounds = new double[numDims];
-            this.lbounds = new double[numDims];
+            this.ubounds = new double[numDims];
             for(int i = 0; i < numDims; i++)
             {
                 this.lbounds[i] = lbounds[i];
@@ -120,7 +128,7 @@ namespace libPSO
                     double range = Math.Abs(ubounds[j] - lbounds[j]);
 
                     particles[i][j] = RndRange(lbounds[j],ubounds[j]);
-                    velocities[i][j] = RndRange(-range, range);
+                    velocities[i][j] = .5*range*(rnd.NextDouble()-rnd.NextDouble());
                     lbestPos[i][j] = particles[i][j];
                 }
                 scores[i] = goalFunc(particles[i]);
@@ -129,12 +137,12 @@ namespace libPSO
 
             int minIdx = GetMinScoreIdx();
             gBest = scores[minIdx];
-            gBestPos = particles[minIdx];
+            particles[minIdx].CopyTo(gBestPos,0);
 
             if(keepHistory)
             {
                 gBestHistory.Add(gBest);
-                particleHistory.Add(particles);
+                particleHistory.Add(DuplicateParticles());
             }
         }
 
@@ -186,8 +194,9 @@ namespace libPSO
                 scores[i] = goalFunc(particles[i]);
                 if(scores[i] < localBestScores[i])
                 {
+                    particles[i].CopyTo(lbestPos[i], 0);
                     localBestScores[i] = scores[i];
-                    lbestPos[i] = particles[i];
+             
                 }
             }
 
@@ -195,15 +204,39 @@ namespace libPSO
             if(scores[minIdx] < gBest)
             {
                 gBest = scores[minIdx];
-                gBestPos = particles[minIdx];
+                particles[minIdx].CopyTo(gBestPos, 0);
             }
 
             if(keepHistory)
             {
                 gBestHistory.Add(gBest);
-                particleHistory.Add(particles);
+                particleHistory.Add(DuplicateParticles());
             }
         }
+        
+        private double[][] DuplicateParticles()
+        {
+            double[][] newHistory = new double[numParticles][];
+            for(int i = 0; i < numParticles; i++)
+            {
+                newHistory[i] = new double[numDims];
+                for(int j = 0; j < numDims; j++)
+                {
+                    newHistory[i][j] = particles[i][j];
+                }
+            }
+            return newHistory;
 
+        }
+
+        public double Optimize()
+        {
+            Init();
+            for(int i = 0; i < maxIters; i++)
+            {
+                Update();
+            }
+            return gBest;
+        }
     }
 }
