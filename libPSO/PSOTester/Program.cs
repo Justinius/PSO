@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using libPSO;
+using libOptimTests;
 
 namespace PSOTester
 {
@@ -11,9 +12,11 @@ namespace PSOTester
     {
         static void Main(string[] args)
         {
+            Beale myGoal = new Beale();// (4, 100);
+
             double[] lb = new double[] { -100,  -100,-100,-100,-100};
             double[] ub = new double[] { 100 , 100,100,100,100};
-            PSO myPSO = new PSO(5, 5, g, lb, ub, 250, true);//, .5, 2, 2);
+            PSO myPSO = new PSO(myGoal.numDims, 20, myGoal.goalFunc, myGoal.lbounds, myGoal.ubounds, 500, true);//, .5, 2, 2);
             double best = myPSO.Optimize();
 
             Console.WriteLine("Best: " + best);

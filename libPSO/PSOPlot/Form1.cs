@@ -41,15 +41,15 @@ namespace PSOPlot
             PSO myPSO = new PSO(2, 20, g, lb, ub, 1000, true, .5, 2, 2);
             double best = myPSO.Optimize();
 
-            Bitmap bmp = new Bitmap(1000,1000);
+            Bitmap bmp = new Bitmap(750,750);
 
             
 
             for (int numIters = 0; numIters < 1000; numIters++)
             {
-                for (int i = 0; i < 1000; i++)
+                for (int i = 0; i < 750; i++)
                 {
-                    for (int j = 0; j < 1000; j++)
+                    for (int j = 0; j < 750; j++)
                     {
                         bmp.SetPixel(i, j, Color.White);
                     }
@@ -58,10 +58,10 @@ namespace PSOPlot
 
                 for (int j = 0; j < 20; j++)
                 {
-                    int x = ScaleDim(myPSO.particleHistory[numIters][j][0], lb[0], ub[0], 1000);
-                    int y = ScaleDim(myPSO.particleHistory[numIters][j][1], lb[1], ub[1], 1000);
+                    int x = ScaleDim(myPSO.particleHistory[numIters][j][0], lb[0], ub[0], 750);
+                    int y = ScaleDim(myPSO.particleHistory[numIters][j][1], lb[1], ub[1], 750);
                          
-                    if(x > 2 && x < 998 && y > 2 && y < 998)
+                    if(x > 2 && x < 748 && y > 2 && y < 748)
                     {
                         for(int q = x-2; q < x+2; q++)
                         {

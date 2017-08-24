@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PSOTester", "PSOTester\PSOT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PSOPlot", "PSOPlot\PSOPlot.csproj", "{236D34CA-7A62-4DF4-90FC-61F237B5B4D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libOptimTests", "libOptimTests\libOptimTests.csproj", "{7E8380BB-7476-4A36-800E-7BA524D36717}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{236D34CA-7A62-4DF4-90FC-61F237B5B4D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{236D34CA-7A62-4DF4-90FC-61F237B5B4D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{236D34CA-7A62-4DF4-90FC-61F237B5B4D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E8380BB-7476-4A36-800E-7BA524D36717}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E8380BB-7476-4A36-800E-7BA524D36717}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E8380BB-7476-4A36-800E-7BA524D36717}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E8380BB-7476-4A36-800E-7BA524D36717}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

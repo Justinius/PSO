@@ -51,6 +51,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\libOptimTests\libOptimTests.csproj">
+      <Project>{7e8380bb-7476-4a36-800e-7ba524d36717}</Project>
+      <Name>libOptimTests</Name>
+    </ProjectReference>
     <ProjectReference Include="..\libPSO\libPSO.csproj">
       <Project>{94855d82-ab4b-434b-937b-4fbcce7bbdb2}</Project>
       <Name>libPSO</Name>
