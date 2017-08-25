@@ -12,7 +12,7 @@ namespace PSOTester
     {
         static void Main(string[] args)
         {
-            Beale myGoal = new Beale();// (4, 100);
+            OptimTests myGoal = new StyblinskiTang(2);// (4, 100);
 
             double[] lb = new double[] { -100,  -100,-100,-100,-100};
             double[] ub = new double[] { 100 , 100,100,100,100};
