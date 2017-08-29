@@ -26,6 +26,7 @@ namespace libPSO
         Func<double[], double> goalFunc;
         Random rnd = new Random();
 
+        enum EdgeEffect { Wrap, Clamp, Reflect };
 
         //Ioan Cristian Trelea. 
         //The particle swarm optimization algorithm: convergence analysis and parameter selection.
@@ -35,7 +36,8 @@ namespace libPSO
         double gWeight;
 
         int maxIters;
-
+        EdgeEffect edgeEffect = EdgeEffect.Reflect;
+        double velEdgeEffectMul = .8;
         
         public PSO(int numDims, int numParticles, 
                    Func<double[], double> goal, 
@@ -146,6 +148,47 @@ namespace libPSO
             }
         }
 
+        private void CalcEdgeEffects(int partIdx, int dimIdx)
+        {
+            if (particles[partIdx][dimIdx] < lbounds[dimIdx])
+            {
+                if(edgeEffect == EdgeEffect.Clamp)
+                {
+                    particles[partIdx][dimIdx] = lbounds[dimIdx];
+                    velocities[partIdx][dimIdx] = 0;
+                }
+                else if(edgeEffect == EdgeEffect.Wrap)
+                {
+                    particles[partIdx][dimIdx] = ubounds[dimIdx] - ((lbounds[dimIdx] - particles[partIdx][dimIdx]) % (ubounds[dimIdx]- lbounds[dimIdx]));
+                    velocities[partIdx][dimIdx] *= velEdgeEffectMul;
+                }
+                else
+                {
+                    particles[partIdx][dimIdx] = lbounds[dimIdx] + ((lbounds[dimIdx] - particles[partIdx][dimIdx]) % (ubounds[dimIdx] - lbounds[dimIdx]));
+                    velocities[partIdx][dimIdx] *= velEdgeEffectMul;
+                }                                
+            }
+
+            if (particles[partIdx][dimIdx] > ubounds[dimIdx])
+            {
+                if (edgeEffect == EdgeEffect.Clamp)
+                {
+                    particles[partIdx][dimIdx] = ubounds[dimIdx];
+                    velocities[partIdx][dimIdx] = 0;
+                }
+                else if (edgeEffect == EdgeEffect.Wrap)
+                {
+                    particles[partIdx][dimIdx] = lbounds[dimIdx] + ((particles[partIdx][dimIdx] - ubounds[dimIdx]) % (ubounds[dimIdx] - lbounds[dimIdx]));
+                    velocities[partIdx][dimIdx] *= velEdgeEffectMul;
+                }
+                else
+                {
+                    particles[partIdx][dimIdx] = ubounds[dimIdx] - ((particles[partIdx][dimIdx] - ubounds[dimIdx]) % (ubounds[dimIdx] - lbounds[dimIdx]));
+                    velocities[partIdx][dimIdx] *= velEdgeEffectMul;
+                }                                
+            }
+        }
+
         private void Update()
         {
             for(int i = 0; i < numParticles; i++)
@@ -161,34 +204,7 @@ namespace libPSO
                                        gWeight * globalR * (gBestPos[j] - particles[i][j]);
                     particles[i][j] = particles[i][j] + velocities[i][j];
 
-                    if (particles[i][j] < lbounds[j])
-                    {
-                        velocities[i][j] = -velocities[i][j];
-                        double updatedPos = lbounds[j] + (lbounds[j] - particles[i][j]);
-                        if(updatedPos > ubounds[j])
-                        {
-                            particles[i][j] = RndRange(lbounds[j], ubounds[j]);
-                        }
-                        else
-                        {
-                            particles[i][j] = updatedPos;
-                        }
-                     
-                    }
-
-                    if (particles[i][j] > ubounds[j])
-                    {
-                        velocities[i][j] = -velocities[i][j];
-                        double updatedPos = ubounds[j] - (particles[i][j] - ubounds[j]);
-                        if (updatedPos < lbounds[j])
-                        {
-                            particles[i][j] = RndRange(lbounds[j], ubounds[j]);
-                        }
-                        else
-                        {
-                            particles[i][j] = updatedPos;
-                        }
-                    }
+                    CalcEdgeEffects(i, j);
                 }
 
                 scores[i] = goalFunc(particles[i]);
