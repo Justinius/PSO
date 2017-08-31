@@ -4,6 +4,29 @@ using System.Text;
 
 namespace libPSO
 {
+
+    enum EdgeEffect { Wrap, Clamp, Reflect };
+    enum Topology { Global, Ring, Random };
+
+    public class PSOSettings
+    {
+        int numParticles;
+        bool keepHistory;
+        //Ioan Cristian Trelea. 
+        //The particle swarm optimization algorithm: convergence analysis and parameter selection.
+        //Inf.Process.Lett., 85(6):317-325, 2003. 
+        double w;
+        double lWeight;
+        double gWeight;
+
+        int maxIters;
+        EdgeEffect edgeEffect = EdgeEffect.Reflect;
+        double velEdgeEffectMul = .8;
+
+        Topology topology = Topology.Ring;
+        int randomTopologyNeighborhoodSize = 4;
+    }
+
     public class PSO
     {
         int numDims;
@@ -15,7 +38,9 @@ namespace libPSO
 
         double[][] particles;
         double[][] velocities;
-        double[][] lbestPos;
+        double[][] lBestPos;
+        double[][] nBestPos;
+        bool[][] topologyGraph;
         double[] scores;
         double[] localBestScores;
 
@@ -27,6 +52,7 @@ namespace libPSO
         Random rnd = new Random();
 
         enum EdgeEffect { Wrap, Clamp, Reflect };
+        enum Topology { Global, Ring, Random};
 
         //Ioan Cristian Trelea. 
         //The particle swarm optimization algorithm: convergence analysis and parameter selection.
@@ -38,6 +64,11 @@ namespace libPSO
         int maxIters;
         EdgeEffect edgeEffect = EdgeEffect.Reflect;
         double velEdgeEffectMul = .8;
+
+        Topology topology = Topology.Ring;
+        int randomTopologyNeighborhoodSize = 4;
+
+        Action GraphUpdate;
         
         public PSO(int numDims, int numParticles, 
                    Func<double[], double> goal, 
@@ -84,14 +115,16 @@ namespace libPSO
 
             particles = new double[numParticles][];
             velocities = new double[numParticles][];
-            lbestPos = new double[numParticles][];
+            lBestPos = new double[numParticles][];
+            nBestPos = new double[numParticles][];
             scores = new double[numParticles];
             localBestScores = new double[numParticles];
             for(int i = 0; i < numParticles; i++)
             {
                 particles[i] = new double[numDims];
                 velocities[i] = new double[numDims];
-                lbestPos[i] = new double[numDims];
+                lBestPos[i] = new double[numDims];
+                nBestPos[i] = new double[numDims];
             }
                         
             this.keepHistory = keepHistory;
@@ -99,6 +132,24 @@ namespace libPSO
             gBestHistory = new List<double>();
             particleHistory = new List<double[][]>();
             
+            if(topology != Topology.Global)
+            {
+                topologyGraph = new bool[numParticles][];
+                for(int i = 0; i < numParticles; i++)
+                {
+                    topologyGraph[i] = new bool[numParticles];
+                    for(int j = 0; j < numParticles; j++)
+                    {
+                        topologyGraph[i][j] = false;
+                    }
+                }
+                GraphUpdate = UpdateNeighborhood;
+            }
+            else
+            {
+                GraphUpdate = UpdateGlobalNeighborhood;
+            }
+
         }
 
         private int GetMinScoreIdx()
@@ -131,7 +182,7 @@ namespace libPSO
 
                     particles[i][j] = RndRange(lbounds[j],ubounds[j]);
                     velocities[i][j] = .5*range*(rnd.NextDouble()-rnd.NextDouble());
-                    lbestPos[i][j] = particles[i][j];
+                    lBestPos[i][j] = particles[i][j];
                 }
                 scores[i] = goalFunc(particles[i]);
                 localBestScores[i] = scores[i];
@@ -145,6 +196,75 @@ namespace libPSO
             {
                 gBestHistory.Add(gBest);
                 particleHistory.Add(DuplicateParticles());
+            }
+
+            if(topology == Topology.Random)
+            {
+                InitRandomTopology();
+            }
+            else if(topology == Topology.Ring)
+            {
+                InitRingTopology();
+            }
+        }
+
+        public void UpdateGlobalNeighborhood()
+        {
+            for(int i = 0; i < numParticles; i++)
+            {
+                gBestPos.CopyTo(nBestPos[i], 0);
+            }
+        }
+
+        public void UpdateNeighborhood()
+        {
+            for(int i = 0; i < numParticles; i++)
+            {
+                int bestParticleInNeighborhood = i;
+                for(int j = 0; j < numParticles; j++)
+                {
+                    if(topologyGraph[i][j] && (localBestScores[j] < localBestScores[bestParticleInNeighborhood]))
+                    {
+                        bestParticleInNeighborhood = j;
+                    }
+                }
+                lBestPos[bestParticleInNeighborhood].CopyTo(lBestPos[i], 0);
+            }
+        }
+
+        public void InitRingTopology()
+        {
+            for(int i = 0; i < numParticles; i++)
+            {
+                topologyGraph[i][i] = true;
+                if(i == 0)
+                {
+                    topologyGraph[i][i + 1] = true;
+                    topologyGraph[i][numParticles - 1] = true;
+                }
+                else if(i == (numParticles - 1))
+                {
+                    topologyGraph[i][i - 1] = true;
+                    topologyGraph[i][0] = true;
+                }
+                else
+                {
+                    topologyGraph[i][i + 1] = true;
+                    topologyGraph[i][i - 1] = true;
+                }
+            }
+        }
+
+        public void InitRandomTopology()
+        {
+            for (int i = 0; i < numParticles; i++)
+            {
+                topologyGraph[i][i] = true;
+                for(int j = 0; j < randomTopologyNeighborhoodSize; j++)
+                {
+                    int randIdx = rnd.Next(0, numParticles);
+                    topologyGraph[i][randIdx] = true;
+                }
             }
         }
 
@@ -191,6 +311,7 @@ namespace libPSO
 
         private void Update()
         {
+            GraphUpdate();
             for(int i = 0; i < numParticles; i++)
             {
                 //update velocity
@@ -200,8 +321,8 @@ namespace libPSO
                     localR = rnd.NextDouble();
                     globalR = rnd.NextDouble();
                     velocities[i][j] = w * velocities[i][j] +
-                                       lWeight * localR * (lbestPos[i][j] - particles[i][j]) +
-                                       gWeight * globalR * (gBestPos[j] - particles[i][j]);
+                                       lWeight * localR * (lBestPos[i][j] - particles[i][j]) +
+                                       gWeight * globalR * (nBestPos[i][j] - particles[i][j]);
                     particles[i][j] = particles[i][j] + velocities[i][j];
 
                     CalcEdgeEffects(i, j);
@@ -210,9 +331,8 @@ namespace libPSO
                 scores[i] = goalFunc(particles[i]);
                 if(scores[i] < localBestScores[i])
                 {
-                    particles[i].CopyTo(lbestPos[i], 0);
+                    particles[i].CopyTo(lBestPos[i], 0);
                     localBestScores[i] = scores[i];
-             
                 }
             }
 
@@ -239,6 +359,21 @@ namespace libPSO
                 for(int j = 0; j < numDims; j++)
                 {
                     newHistory[i][j] = particles[i][j];
+                }
+            }
+            return newHistory;
+
+        }
+
+        private double[][] DuplicateLocalBest()
+        {
+            double[][] newHistory = new double[numParticles][];
+            for (int i = 0; i < numParticles; i++)
+            {
+                newHistory[i] = new double[numDims];
+                for (int j = 0; j < numDims; j++)
+                {
+                    newHistory[i][j] = lBestPos[i][j];
                 }
             }
             return newHistory;
