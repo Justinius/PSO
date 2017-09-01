@@ -5,13 +5,15 @@ using System.Text;
 namespace libPSO
 {
 
-    enum EdgeEffect { Wrap, Clamp, Reflect };
-    enum Topology { Global, Ring, Random };
+    public enum EdgeEffect { Wrap, Clamp, Reflect };
+    public enum Topology { Global, Ring, Random };
 
     public class PSOSettings
     {
         int numParticles;
         bool keepHistory;
+        int historySpan;
+        
         //Ioan Cristian Trelea. 
         //The particle swarm optimization algorithm: convergence analysis and parameter selection.
         //Inf.Process.Lett., 85(6):317-325, 2003. 
@@ -20,12 +22,67 @@ namespace libPSO
         double gWeight;
 
         int maxIters;
+        int numItersNoImprovement;
+        double noImprovementThreshold;
+
         EdgeEffect edgeEffect = EdgeEffect.Reflect;
         double velEdgeEffectMul = .8;
 
-        Topology topology = Topology.Ring;
-        int randomTopologyNeighborhoodSize = 4;
+        Topology topology;
+        int randomTopologyNeighborhoodSize;
+
+        public PSOSettings()
+        {
+            numParticles = 20;
+            keepHistory = false;
+            w = .7968;
+            lWeight = 1.4962;
+            gWeight = 1.4962;
+            maxIters = 500;
+            numItersNoImprovement = (int)(maxIters * .1);
+            noImprovementThreshold = .05;
+            edgeEffect = EdgeEffect.Reflect;
+            velEdgeEffectMul = .8;
+            topology = Topology.Global;
+        }
+
+        public void enableHistory(int span)
+        {
+            keepHistory = true;
+            historySpan = span;
+        }
+
+        public void setTopology(Topology T, int param = 0)
+        {
+            topology = T;
+            if(topology == Topology.Random)
+            {
+                randomTopologyNeighborhoodSize = param;
+                if(randomTopologyNeighborhoodSize == 0)
+                {
+                    throw new ArgumentException("Random Topology needs neighborhood size.");
+                }
+            }
+        }
+
+        public void setNumParticles(int num)
+        {
+            if (num <= 0) throw new ArgumentException("Number of Particles must be greater than 0.");
+            numParticles = num;
+        }
+
+        public void setEdgeEffect(EdgeEffect E, double param = .8)
+        {
+            edgeEffect = E;
+            if (edgeEffect != EdgeEffect.Clamp)
+            {
+                velEdgeEffectMul = param;
+            }
+        }
+
     }
+
+
 
     public class PSO
     {
@@ -65,7 +122,7 @@ namespace libPSO
         EdgeEffect edgeEffect = EdgeEffect.Reflect;
         double velEdgeEffectMul = .8;
 
-        Topology topology = Topology.Ring;
+        Topology topology = Topology.Global;
         int randomTopologyNeighborhoodSize = 4;
 
         Action GraphUpdate;

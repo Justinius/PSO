@@ -16,7 +16,7 @@ namespace PSOTester
 
             double[] lb = new double[] { -100,  -100,-100,-100,-100};
             double[] ub = new double[] { 100 , 100,100,100,100};
-            PSO myPSO = new PSO(myGoal.numDims, 20, myGoal.goalFunc, myGoal.lbounds, myGoal.ubounds, 500, true);//, .5, 2, 2);
+            PSO myPSO = new PSO(myGoal.numDims, 10, myGoal.goalFunc, myGoal.lbounds, myGoal.ubounds, 500, true);//, .5, 2, 2);
             double best = myPSO.Optimize();
 
             Console.WriteLine("Best: " + best);
