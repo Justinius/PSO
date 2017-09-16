@@ -38,7 +38,9 @@ namespace PSOPlot
         {
             double[] lb = new double[] { -100, -100 };
             double[] ub = new double[] { 100, 100 };
-            PSO myPSO = new PSO(2, 20, g, lb, ub, 1000, true, .5, 2, 2);
+            PSOSettings optimSettings = new PSOSettings();
+
+            PSO myPSO = new PSO(optimSettings, 2, G, lb, ub);
             double best = myPSO.Optimize();
 
             Bitmap bmp = new Bitmap(750,750);
@@ -85,7 +87,7 @@ namespace PSOPlot
             
         }
 
-        static double g(double[] x)
+        static double G(double[] x)
         {
             double val = 0;
             for (int i = 0; i < x.Length; i++)

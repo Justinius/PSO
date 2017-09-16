@@ -102,13 +102,13 @@ namespace libPSO
             SelTopology = Topology.Global;
         }
 
-        public void enableHistory(int span)
+        public void EnableHistory(int span)
         {
             KeepHistory = true;
             HistorySpan = span;
         }
 
-        public void setTopology(Topology T, int param = 0)
+        public void SetTopology(Topology T, int param = 0)
         {
             SelTopology = T;
             if(SelTopology == Topology.Random)
@@ -121,13 +121,13 @@ namespace libPSO
             }
         }
 
-        public void setNumParticles(int num)
+        public void SetNumParticles(int num)
         {
             if (num <= 0) throw new ArgumentException("Number of Particles must be greater than 0.");
             NumParticles = num;
         }
 
-        public void setEdgeEffect(EdgeEffect E, double param = .8)
+        public void SetEdgeEffect(EdgeEffect E, double param = .8)
         {
             EdgeEffect = E;
             if (EdgeEffect != EdgeEffect.Clamp)
@@ -136,13 +136,13 @@ namespace libPSO
             }
         }
 
-        public void setVelocityWeight(double velWeight)
+        public void SetVelocityWeight(double velWeight)
         {
             StartVelocityWeight = velWeight;
             VelScalingType = WeightScaling.Constant;
         }
 
-        public void setVelocityWeight(int startIter, double startWeight, int endIter, double endWeight)
+        public void SetVelocityWeight(int startIter, double startWeight, int endIter, double endWeight)
         {
             VelScalingType = WeightScaling.Linear;
             StartVelocityWeight = startWeight;
@@ -151,13 +151,13 @@ namespace libPSO
             EndVelocityIter = endIter;
         }
 
-        public void setNeighborhoodWeight(double neighborWeight)
+        public void SetNeighborhoodWeight(double neighborWeight)
         {
             StartNeighborhoodWeight = neighborWeight;
             NeighborScalingType = WeightScaling.Constant;
         }
 
-        public void setNeightborhoodWeight(int startIter, double startWeight, int endIter, double endWeight)
+        public void SetNeightborhoodWeight(int startIter, double startWeight, int endIter, double endWeight)
         {
             NeighborScalingType = WeightScaling.Linear;
             StartNeighborhoodWeight = startWeight;
@@ -166,13 +166,13 @@ namespace libPSO
             EndNeighborhoodIter = endIter;
         }
 
-        public void setLocalWeight(double GlobalWeight)
+        public void SetLocalWeight(double GlobalWeight)
         {
             StartLocalWeight = GlobalWeight;
             LocalScalingType = WeightScaling.Constant;
         }
 
-        public void setLocalWeight(int startIter, double startWeight, int endIter, double endWeight)
+        public void SetLocalWeight(int startIter, double startWeight, int endIter, double endWeight)
         {
             LocalScalingType = WeightScaling.Linear;
             StartLocalWeight = startWeight;
@@ -357,35 +357,35 @@ namespace libPSO
             
             if (currSettings.VelScalingType == WeightScaling.Constant)
             {
-                updateVelocityWeight = updateVelWeight;
+                updateVelocityWeight = UpdateVelWeight;
             }
             else
             {
                 w_m = (currSettings.StartVelocityWeight - currSettings.EndVelocityWeight) / (currSettings.StartVelocityIter - currSettings.EndVelocityIter);
                 w_b = currSettings.StartVelocityWeight - w_m * currSettings.StartVelocityIter;
-                updateVelocityWeight = updateVelWeightLinear;
+                updateVelocityWeight = UpdateVelWeightLinear;
             }
 
             if (currSettings.LocalScalingType == WeightScaling.Constant)
             {
-                updateLocalWeight = updateLWeight;
+                updateLocalWeight = UpdateLWeight;
             }
             else
             {
                 lW_m = (currSettings.StartLocalWeight - currSettings.EndLocalWeight) / (currSettings.StartLocalIter - currSettings.EndLocalIter);
                 lW_b = currSettings.StartLocalWeight - lW_m * currSettings.StartLocalIter;
-                updateLocalWeight = updateLWeightLinear;
+                updateLocalWeight = UpdateLWeightLinear;
             }
 
             if (currSettings.NeighborScalingType == WeightScaling.Constant)
             {
-                updateGlobalWeight = updateGWeight;
+                updateGlobalWeight = UpdateGWeight;
             }
             else
             {
-                lW_m = (currSettings.StartNeighborhoodWeight - currSettings.EndNeighborhoodWeight) / (currSettings.StartNeighborhoodIter - currSettings.EndNeighborhoodIter);
-                lW_b = currSettings.StartNeighborhoodWeight - lW_m * currSettings.StartNeighborhoodIter;
-                updateGlobalWeight = updateGWeightLinear;
+                gW_m = (currSettings.StartNeighborhoodWeight - currSettings.EndNeighborhoodWeight) / (currSettings.StartNeighborhoodIter - currSettings.EndNeighborhoodIter);
+                gW_b = currSettings.StartNeighborhoodWeight - gW_m * currSettings.StartNeighborhoodIter;
+                updateGlobalWeight = UpdateGWeightLinear;
             }
             
         }
@@ -416,12 +416,12 @@ namespace libPSO
             }
         }
 
-        public double updateVelWeight(int iter)
+        public double UpdateVelWeight(int iter)
         {
             return currSettings.W;
         }
 
-        public double updateVelWeightLinear(int iter)
+        public double UpdateVelWeightLinear(int iter)
         {
             if(iter < currSettings.StartVelocityIter)
             {
@@ -441,12 +441,12 @@ namespace libPSO
             return w_m * iter + w_b;
         }
 
-        public double updateLWeight(int iter)
+        public double UpdateLWeight(int iter)
         {
             return currSettings.LWeight;
         }
 
-        public double updateLWeightLinear(int iter)
+        public double UpdateLWeightLinear(int iter)
         {
             if (iter < currSettings.StartLocalIter)
             {
@@ -466,12 +466,12 @@ namespace libPSO
             return lW_m * iter + lW_b;
         }
 
-        public double updateGWeight(int iter)
+        public double UpdateGWeight(int iter)
         {
             return currSettings.GWeight;
         }
 
-        public double updateGWeightLinear(int iter)
+        public double UpdateGWeightLinear(int iter)
         {
             if (iter < currSettings.StartVelocityIter)
             {
@@ -568,7 +568,7 @@ namespace libPSO
             }
         }
 
-        private double Optimize()
+        public double Optimize()
         {
             for (int iter = 1; iter < currSettings.MaxIters; iter++)
             {

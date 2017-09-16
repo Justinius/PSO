@@ -16,7 +16,9 @@ namespace PSOTester
 
             double[] lb = new double[] { -100,  -100,-100,-100,-100};
             double[] ub = new double[] { 100 , 100,100,100,100};
-            PSO myPSO = new PSO(myGoal.numDims, 10, myGoal.goalFunc, myGoal.lbounds, myGoal.ubounds, 500, true);//, .5, 2, 2);
+
+            PSOSettings optimSettings = new PSOSettings();
+            PSO myPSO = new PSO(optimSettings, myGoal.numDims, myGoal.goalFunc, myGoal.lbounds, myGoal.ubounds);
             double best = myPSO.Optimize();
 
             Console.WriteLine("Best: " + best);
@@ -30,7 +32,7 @@ namespace PSOTester
             Console.ReadLine();
         }
 
-        static double g(double[] x)
+        static double G(double[] x)
         {
             double val=0;
             for (int i = 0; i < x.Length; i++)
