@@ -7,6 +7,7 @@ namespace libPSO
 
     public enum EdgeEffect { Wrap, Clamp, Reflect };
     public enum Topology { Global, Ring, Random };
+    public enum WeightScaling { Constant, Linear }
 
     public class PSOSettings
     {
@@ -31,34 +32,89 @@ namespace libPSO
         Topology topology;
         int randomTopologyNeighborhoodSize;
 
+        WeightScaling velScalingType;
+        double startVelocityWeight;
+        double endVelocityWeight;
+        int startVelocityIter;
+        int endVelocityIter;
+
+        WeightScaling neighborScalingType;
+        double startNeighborhoodWeight;
+        double endNeighborhoodWeight;
+        int startNeighborhoodIter;
+        int endNeighborhoodIter;
+
+        WeightScaling localScalingType;
+        double startLocalWeight;
+        double endLocalWeight;
+        int startLocalIter;
+        int endLocalIter;
+
+        public int NumParticles { get => numParticles; set => numParticles = value; }
+
+        public bool KeepHistory { get => keepHistory; set => keepHistory = value; }
+        public int HistorySpan { get => historySpan; set => historySpan = value; }
+
+        public int MaxIters { get => maxIters; set => maxIters = value; }
+        public int NumItersNoImprovement { get => numItersNoImprovement; set => numItersNoImprovement = value; }
+        public double NoImprovementThreshold { get => noImprovementThreshold; set => noImprovementThreshold = value; }
+
+        public EdgeEffect EdgeEffect { get => edgeEffect; set => edgeEffect = value; }
+        public double VelEdgeEffectMul { get => velEdgeEffectMul; set => velEdgeEffectMul = value; }
+
+        public Topology SelTopology { get => topology; set => topology = value; }
+        public int RandomTopologyNeighborhoodSize { get => randomTopologyNeighborhoodSize; set => randomTopologyNeighborhoodSize = value; }
+
+        public WeightScaling VelScalingType { get => velScalingType; set => velScalingType = value; }
+        public double StartVelocityWeight { get => startVelocityWeight; set => startVelocityWeight = value; }
+        public double EndVelocityWeight { get => endVelocityWeight; set => endVelocityWeight = value; }
+        public int StartVelocityIter { get => startVelocityIter; set => startVelocityIter = value; }
+        public int EndVelocityIter { get => endVelocityIter; set => endVelocityIter = value; }
+
+        public WeightScaling NeighborScalingType { get => neighborScalingType; set => neighborScalingType = value; }
+        public double StartNeighborhoodWeight { get => startNeighborhoodWeight; set => startNeighborhoodWeight = value; }
+        public double EndNeighborhoodWeight { get => endNeighborhoodWeight; set => endNeighborhoodWeight = value; }
+        public int StartNeighborhoodIter { get => startNeighborhoodIter; set => startNeighborhoodIter = value; }
+        public int EndNeighborhoodIter { get => endNeighborhoodIter; set => endNeighborhoodIter = value; }
+
+        public WeightScaling LocalScalingType { get => localScalingType; set => localScalingType = value; }
+        public double StartLocalWeight { get => startLocalWeight; set => startLocalWeight = value; }
+        public double EndLocalWeight { get => endLocalWeight; set => endLocalWeight = value; }
+        public int StartLocalIter { get => startLocalIter; set => startLocalIter = value; }
+        public int EndLocalIter { get => endLocalIter; set => endLocalIter = value; }
+
+        public double W { get => w; set => w = value; }
+        public double LWeight { get => lWeight; set => lWeight = value; }
+        public double GWeight { get => gWeight; set => gWeight = value; }
+
         public PSOSettings()
         {
-            numParticles = 20;
-            keepHistory = false;
-            w = .7968;
-            lWeight = 1.4962;
-            gWeight = 1.4962;
-            maxIters = 500;
-            numItersNoImprovement = (int)(maxIters * .1);
-            noImprovementThreshold = .05;
-            edgeEffect = EdgeEffect.Reflect;
-            velEdgeEffectMul = .8;
-            topology = Topology.Global;
+            NumParticles = 20;
+            KeepHistory = false;
+            W = .7968;
+            LWeight = 1.4962;
+            GWeight = 1.4962;
+            MaxIters = 500;
+            NumItersNoImprovement = (int)(MaxIters * .1);
+            NoImprovementThreshold = .05;
+            EdgeEffect = EdgeEffect.Reflect;
+            VelEdgeEffectMul = .8;
+            SelTopology = Topology.Global;
         }
 
         public void enableHistory(int span)
         {
-            keepHistory = true;
-            historySpan = span;
+            KeepHistory = true;
+            HistorySpan = span;
         }
 
         public void setTopology(Topology T, int param = 0)
         {
-            topology = T;
-            if(topology == Topology.Random)
+            SelTopology = T;
+            if(SelTopology == Topology.Random)
             {
-                randomTopologyNeighborhoodSize = param;
-                if(randomTopologyNeighborhoodSize == 0)
+                RandomTopologyNeighborhoodSize = param;
+                if(RandomTopologyNeighborhoodSize == 0)
                 {
                     throw new ArgumentException("Random Topology needs neighborhood size.");
                 }
@@ -68,24 +124,68 @@ namespace libPSO
         public void setNumParticles(int num)
         {
             if (num <= 0) throw new ArgumentException("Number of Particles must be greater than 0.");
-            numParticles = num;
+            NumParticles = num;
         }
 
         public void setEdgeEffect(EdgeEffect E, double param = .8)
         {
-            edgeEffect = E;
-            if (edgeEffect != EdgeEffect.Clamp)
+            EdgeEffect = E;
+            if (EdgeEffect != EdgeEffect.Clamp)
             {
-                velEdgeEffectMul = param;
+                VelEdgeEffectMul = param;
             }
         }
 
+        public void setVelocityWeight(double velWeight)
+        {
+            StartVelocityWeight = velWeight;
+            VelScalingType = WeightScaling.Constant;
+        }
+
+        public void setVelocityWeight(int startIter, double startWeight, int endIter, double endWeight)
+        {
+            VelScalingType = WeightScaling.Linear;
+            StartVelocityWeight = startWeight;
+            EndVelocityWeight = endWeight;
+            StartVelocityIter = startIter;
+            EndVelocityIter = endIter;
+        }
+
+        public void setNeighborhoodWeight(double neighborWeight)
+        {
+            StartNeighborhoodWeight = neighborWeight;
+            NeighborScalingType = WeightScaling.Constant;
+        }
+
+        public void setNeightborhoodWeight(int startIter, double startWeight, int endIter, double endWeight)
+        {
+            NeighborScalingType = WeightScaling.Linear;
+            StartNeighborhoodWeight = startWeight;
+            EndNeighborhoodWeight = endWeight;
+            StartNeighborhoodIter = startIter;
+            EndNeighborhoodIter = endIter;
+        }
+
+        public void setLocalWeight(double GlobalWeight)
+        {
+            StartLocalWeight = GlobalWeight;
+            LocalScalingType = WeightScaling.Constant;
+        }
+
+        public void setLocalWeight(int startIter, double startWeight, int endIter, double endWeight)
+        {
+            LocalScalingType = WeightScaling.Linear;
+            StartLocalWeight = startWeight;
+            EndLocalWeight = endWeight;
+            StartLocalIter = startIter;
+            EndLocalIter = endIter;
+        }
     }
-
-
-
+    
     public class PSO
     {
+        PSOSettings currSettings;
+
         int numDims;
         int numParticles;
         double[] lbounds;
@@ -101,68 +201,53 @@ namespace libPSO
         double[] scores;
         double[] localBestScores;
 
-        bool keepHistory;
         public List<double> gBestHistory;
         public List<double[][]> particleHistory;
 
         Func<double[], double> goalFunc;
         Random rnd = new Random();
 
-        enum EdgeEffect { Wrap, Clamp, Reflect };
-        enum Topology { Global, Ring, Random};
+        double w_b, w_m;
+        double lW_b, lW_m;
+        double gW_b, gW_m;
 
-        //Ioan Cristian Trelea. 
-        //The particle swarm optimization algorithm: convergence analysis and parameter selection.
-        //Inf.Process.Lett., 85(6):317-325, 2003. 
-        double w;
-        double lWeight;
-        double gWeight;
-
-        int maxIters;
-        EdgeEffect edgeEffect = EdgeEffect.Reflect;
-        double velEdgeEffectMul = .8;
-
-        Topology topology = Topology.Global;
-        int randomTopologyNeighborhoodSize = 4;
+        Func<int, double> updateVelocityWeight;
+        Func<int, double> updateLocalWeight;
+        Func<int, double> updateGlobalWeight;
 
         Action GraphUpdate;
-        
-        public PSO(int numDims, int numParticles, 
+
+        public PSO(PSOSettings settings, int inNumDims, 
                    Func<double[], double> goal, 
-                   double[] lbounds, double[] ubounds, 
-                   int iters,
-                   bool keepHistory = false,
-                   double velocityWeight = .7968, double localBestWeight = 1.4962, double globalBestWeight = 1.4962)
+                   double[] lbounds, double[] ubounds 
+                  )
         {
-            
+
+            currSettings = settings;
+            numDims = inNumDims;
+            numParticles = currSettings.NumParticles;
+
             if (numDims <= 0)
                 throw new ArgumentException("Number of dimensions should be greater than 0.");
 
-            if(numParticles <= 0)
+            if(currSettings.NumParticles <= 0)
                 throw new ArgumentException("Number of particles should be greather than 0.");
 
-            if (iters <= 0)
+            if (currSettings.MaxIters <= 0)
                 throw new ArgumentException("Number of iterations should be greather than 0.");
 
             if (lbounds.Length != numDims || ubounds.Length != numDims)
                 throw new ArgumentException("Bounds should have a length of NUMDIMS.");
-
-            w = velocityWeight;
-            lWeight = localBestWeight;
-            gWeight = globalBestWeight;
-            maxIters = iters;
-            
+                                   
             for(int i = 0; i < numDims; i++)
             {
                 if (lbounds[i] >= ubounds[i])
-                    throw new ArgumentException("Bounda are degenerate.");
+                    throw new ArgumentException("Bounds are degenerate.");
             }
 
-            this.numDims = numDims;
-            this.numParticles = numParticles;
             this.lbounds = new double[numDims];
             this.ubounds = new double[numDims];
-            for(int i = 0; i < numDims; i++)
+            for (int i = 0; i < numDims; i++)
             {
                 this.lbounds[i] = lbounds[i];
                 this.ubounds[i] = ubounds[i];
@@ -170,43 +255,7 @@ namespace libPSO
 
             goalFunc = goal;
 
-            particles = new double[numParticles][];
-            velocities = new double[numParticles][];
-            lBestPos = new double[numParticles][];
-            nBestPos = new double[numParticles][];
-            scores = new double[numParticles];
-            localBestScores = new double[numParticles];
-            for(int i = 0; i < numParticles; i++)
-            {
-                particles[i] = new double[numDims];
-                velocities[i] = new double[numDims];
-                lBestPos[i] = new double[numDims];
-                nBestPos[i] = new double[numDims];
-            }
-                        
-            this.keepHistory = keepHistory;
-            gBestPos = new double[numDims];
-            gBestHistory = new List<double>();
-            particleHistory = new List<double[][]>();
-            
-            if(topology != Topology.Global)
-            {
-                topologyGraph = new bool[numParticles][];
-                for(int i = 0; i < numParticles; i++)
-                {
-                    topologyGraph[i] = new bool[numParticles];
-                    for(int j = 0; j < numParticles; j++)
-                    {
-                        topologyGraph[i][j] = false;
-                    }
-                }
-                GraphUpdate = UpdateNeighborhood;
-            }
-            else
-            {
-                GraphUpdate = UpdateGlobalNeighborhood;
-            }
-
+            Init();
         }
 
         private int GetMinScoreIdx()
@@ -231,6 +280,27 @@ namespace libPSO
 
         private void Init()
         {
+            //create all the particles and associated data
+            particles = new double[numParticles][];
+            velocities = new double[numParticles][];
+            lBestPos = new double[numParticles][];
+            nBestPos = new double[numParticles][];
+            scores = new double[numParticles];
+            localBestScores = new double[numParticles];
+            for (int i = 0; i < numParticles; i++)
+            {
+                particles[i] = new double[numDims];
+                velocities[i] = new double[numDims];
+                lBestPos[i] = new double[numDims];
+                nBestPos[i] = new double[numDims];
+            }
+
+            gBestPos = new double[numDims];
+            gBestHistory = new List<double>();
+            particleHistory = new List<double[][]>();
+            
+            //algorithm starts with random init of pos and vel
+            //and the scores that go along with it
             for (int i = 0; i < numParticles; i++)
             {
                 for (int j = 0; j < numDims; j++)
@@ -249,28 +319,85 @@ namespace libPSO
             gBest = scores[minIdx];
             particles[minIdx].CopyTo(gBestPos,0);
 
-            if(keepHistory)
+            if(currSettings.KeepHistory)
             {
                 gBestHistory.Add(gBest);
                 particleHistory.Add(DuplicateParticles());
             }
 
-            if(topology == Topology.Random)
+            //somewhat advanced variants of algorithm have various information exchange
+            //global, random, ring
+            if (currSettings.SelTopology != Topology.Global)
             {
-                InitRandomTopology();
+                topologyGraph = new bool[numParticles][];
+                for (int i = 0; i < numParticles; i++)
+                {
+                    topologyGraph[i] = new bool[numParticles];
+                    for (int j = 0; j < numParticles; j++)
+                    {
+                        topologyGraph[i][j] = false;
+                    }
+                }
+
+                if (currSettings.SelTopology == Topology.Random)
+                {
+                    InitRandomTopology();
+                }
+                else if (currSettings.SelTopology == Topology.Ring)
+                {
+                    InitRingTopology();
+                }
+
+                GraphUpdate = UpdateNeighborhood;
             }
-            else if(topology == Topology.Ring)
+            else
             {
-                InitRingTopology();
+                GraphUpdate = UpdateGlobalNeighborhood;
             }
+            
+            if (currSettings.VelScalingType == WeightScaling.Constant)
+            {
+                updateVelocityWeight = updateVelWeight;
+            }
+            else
+            {
+                w_m = (currSettings.StartVelocityWeight - currSettings.EndVelocityWeight) / (currSettings.StartVelocityIter - currSettings.EndVelocityIter);
+                w_b = currSettings.StartVelocityWeight - w_m * currSettings.StartVelocityIter;
+                updateVelocityWeight = updateVelWeightLinear;
+            }
+
+            if (currSettings.LocalScalingType == WeightScaling.Constant)
+            {
+                updateLocalWeight = updateLWeight;
+            }
+            else
+            {
+                lW_m = (currSettings.StartLocalWeight - currSettings.EndLocalWeight) / (currSettings.StartLocalIter - currSettings.EndLocalIter);
+                lW_b = currSettings.StartLocalWeight - lW_m * currSettings.StartLocalIter;
+                updateLocalWeight = updateLWeightLinear;
+            }
+
+            if (currSettings.NeighborScalingType == WeightScaling.Constant)
+            {
+                updateGlobalWeight = updateGWeight;
+            }
+            else
+            {
+                lW_m = (currSettings.StartNeighborhoodWeight - currSettings.EndNeighborhoodWeight) / (currSettings.StartNeighborhoodIter - currSettings.EndNeighborhoodIter);
+                lW_b = currSettings.StartNeighborhoodWeight - lW_m * currSettings.StartNeighborhoodIter;
+                updateGlobalWeight = updateGWeightLinear;
+            }
+            
         }
 
         public void UpdateGlobalNeighborhood()
         {
-            for(int i = 0; i < numParticles; i++)
-            {
-                gBestPos.CopyTo(nBestPos[i], 0);
-            }
+            //decided to do this with logic in main loop than possibly waste all these memory copies
+            return;
+            //for(int i = 0; i < numParticles; i++)
+            //{
+            //    gBestPos.CopyTo(nBestPos[i], 0);
+            //}
         }
 
         public void UpdateNeighborhood()
@@ -285,8 +412,83 @@ namespace libPSO
                         bestParticleInNeighborhood = j;
                     }
                 }
-                lBestPos[bestParticleInNeighborhood].CopyTo(lBestPos[i], 0);
+                lBestPos[bestParticleInNeighborhood].CopyTo(nBestPos[i], 0);
             }
+        }
+
+        public double updateVelWeight(int iter)
+        {
+            return currSettings.W;
+        }
+
+        public double updateVelWeightLinear(int iter)
+        {
+            if(iter < currSettings.StartVelocityIter)
+            {
+                return currSettings.StartVelocityWeight;
+            }
+            if(iter > currSettings.EndVelocityIter)
+            {
+                return currSettings.EndVelocityWeight;
+            }
+
+            //wStart = m*wStartIter + b
+            //wEnd   = m*wEndIter + b
+            //wStart - wEnd = m(wStartIter-wEndIter)
+            //double m = (wStart - wEnd) / (wStartIter - wEndIter);
+            //double b = wStart - m*wStartIter
+
+            return w_m * iter + w_b;
+        }
+
+        public double updateLWeight(int iter)
+        {
+            return currSettings.LWeight;
+        }
+
+        public double updateLWeightLinear(int iter)
+        {
+            if (iter < currSettings.StartLocalIter)
+            {
+                return currSettings.StartLocalWeight;
+            }
+            if (iter > currSettings.EndLocalIter)
+            {
+                return currSettings.EndLocalWeight;
+            }
+
+            //wStart = m*wStartIter + b
+            //wEnd   = m*wEndIter + b
+            //wStart - wEnd = m(wStartIter-wEndIter)
+            //double m = (wStart - wEnd) / (wStartIter - wEndIter);
+            //double b = wStart - m*wStartIter
+
+            return lW_m * iter + lW_b;
+        }
+
+        public double updateGWeight(int iter)
+        {
+            return currSettings.GWeight;
+        }
+
+        public double updateGWeightLinear(int iter)
+        {
+            if (iter < currSettings.StartVelocityIter)
+            {
+                return currSettings.StartNeighborhoodWeight;
+            }
+            if (iter > currSettings.EndNeighborhoodIter)
+            {
+                return currSettings.EndNeighborhoodWeight;
+            }
+
+            //wStart = m*wStartIter + b
+            //wEnd   = m*wEndIter + b
+            //wStart - wEnd = m(wStartIter-wEndIter)
+            //double m = (wStart - wEnd) / (wStartIter - wEndIter);
+            //double b = wStart - m*wStartIter
+
+            return gW_m * iter + gW_b;
         }
 
         public void InitRingTopology()
@@ -317,7 +519,7 @@ namespace libPSO
             for (int i = 0; i < numParticles; i++)
             {
                 topologyGraph[i][i] = true;
-                for(int j = 0; j < randomTopologyNeighborhoodSize; j++)
+                for(int j = 0; j < currSettings.RandomTopologyNeighborhoodSize; j++)
                 {
                     int randIdx = rnd.Next(0, numParticles);
                     topologyGraph[i][randIdx] = true;
@@ -329,82 +531,98 @@ namespace libPSO
         {
             if (particles[partIdx][dimIdx] < lbounds[dimIdx])
             {
-                if(edgeEffect == EdgeEffect.Clamp)
+                if(currSettings.EdgeEffect == EdgeEffect.Clamp)
                 {
                     particles[partIdx][dimIdx] = lbounds[dimIdx];
                     velocities[partIdx][dimIdx] = 0;
                 }
-                else if(edgeEffect == EdgeEffect.Wrap)
+                else if(currSettings.EdgeEffect == EdgeEffect.Wrap)
                 {
                     particles[partIdx][dimIdx] = ubounds[dimIdx] - ((lbounds[dimIdx] - particles[partIdx][dimIdx]) % (ubounds[dimIdx]- lbounds[dimIdx]));
-                    velocities[partIdx][dimIdx] *= velEdgeEffectMul;
+                    velocities[partIdx][dimIdx] *= currSettings.VelEdgeEffectMul;
                 }
                 else
                 {
                     particles[partIdx][dimIdx] = lbounds[dimIdx] + ((lbounds[dimIdx] - particles[partIdx][dimIdx]) % (ubounds[dimIdx] - lbounds[dimIdx]));
-                    velocities[partIdx][dimIdx] *= velEdgeEffectMul;
+                    velocities[partIdx][dimIdx] *= currSettings.VelEdgeEffectMul;
                 }                                
             }
 
             if (particles[partIdx][dimIdx] > ubounds[dimIdx])
             {
-                if (edgeEffect == EdgeEffect.Clamp)
+                if (currSettings.EdgeEffect == EdgeEffect.Clamp)
                 {
                     particles[partIdx][dimIdx] = ubounds[dimIdx];
                     velocities[partIdx][dimIdx] = 0;
                 }
-                else if (edgeEffect == EdgeEffect.Wrap)
+                else if (currSettings.EdgeEffect == EdgeEffect.Wrap)
                 {
                     particles[partIdx][dimIdx] = lbounds[dimIdx] + ((particles[partIdx][dimIdx] - ubounds[dimIdx]) % (ubounds[dimIdx] - lbounds[dimIdx]));
-                    velocities[partIdx][dimIdx] *= velEdgeEffectMul;
+                    velocities[partIdx][dimIdx] *= currSettings.VelEdgeEffectMul;
                 }
                 else
                 {
                     particles[partIdx][dimIdx] = ubounds[dimIdx] - ((particles[partIdx][dimIdx] - ubounds[dimIdx]) % (ubounds[dimIdx] - lbounds[dimIdx]));
-                    velocities[partIdx][dimIdx] *= velEdgeEffectMul;
+                    velocities[partIdx][dimIdx] *= currSettings.VelEdgeEffectMul;
                 }                                
             }
         }
 
-        private void Update()
+        private double Optimize()
         {
-            GraphUpdate();
-            for(int i = 0; i < numParticles; i++)
+            for (int iter = 1; iter < currSettings.MaxIters; iter++)
             {
-                //update velocity
-                double localR, globalR;
-                for(int j = 0; j < numDims; j++)
+                GraphUpdate();
+                for (int i = 0; i < numParticles; i++)
                 {
-                    localR = rnd.NextDouble();
-                    globalR = rnd.NextDouble();
-                    velocities[i][j] = w * velocities[i][j] +
-                                       lWeight * localR * (lBestPos[i][j] - particles[i][j]) +
-                                       gWeight * globalR * (nBestPos[i][j] - particles[i][j]);
-                    particles[i][j] = particles[i][j] + velocities[i][j];
+                    //update velocity
+                    double localR, globalR;
+                    for (int j = 0; j < numDims; j++)
+                    {
+                        localR = rnd.NextDouble();
+                        globalR = rnd.NextDouble();
 
-                    CalcEdgeEffects(i, j);
+                        velocities[i][j] = updateVelocityWeight(iter) * velocities[i][j] +
+                                           updateLocalWeight(iter) * localR * (lBestPos[i][j] - particles[i][j]);
+
+                        //if global topology then use gBest, if not then has to use nBest
+                        //if global, which is probably most use cases, save numParticles*numIters array copy
+                        if (currSettings.SelTopology == Topology.Global)
+                        {
+                            velocities[i][j] += updateGlobalWeight(iter) * globalR * (gBestPos[j] - particles[i][j]);
+                        }
+                        else
+                        {
+                            velocities[i][j] += updateGlobalWeight(iter) * globalR * (nBestPos[i][j] - particles[i][j]);
+                        }
+                                                
+                        particles[i][j] = particles[i][j] + velocities[i][j];
+
+                        CalcEdgeEffects(i, j);
+                    }
+
+                    scores[i] = goalFunc(particles[i]);
+                    if (scores[i] < localBestScores[i])
+                    {
+                        particles[i].CopyTo(lBestPos[i], 0);
+                        localBestScores[i] = scores[i];
+                    }
                 }
 
-                scores[i] = goalFunc(particles[i]);
-                if(scores[i] < localBestScores[i])
+                int minIdx = GetMinScoreIdx();
+                if (scores[minIdx] < gBest)
                 {
-                    particles[i].CopyTo(lBestPos[i], 0);
-                    localBestScores[i] = scores[i];
+                    gBest = scores[minIdx];
+                    particles[minIdx].CopyTo(gBestPos, 0);
+                }
+
+                if (currSettings.KeepHistory && (iter % currSettings.HistorySpan) == 0)
+                {
+                    gBestHistory.Add(gBest);
+                    particleHistory.Add(DuplicateParticles());
                 }
             }
-
-            int minIdx = GetMinScoreIdx();
-            if(scores[minIdx] < gBest)
-            {
-                gBest = scores[minIdx];
-                particles[minIdx].CopyTo(gBestPos, 0);
-            }
-
-            if(keepHistory)
-            {
-                gBestHistory.Add(gBest);
-                particleHistory.Add(DuplicateParticles());
-            }
+            return gBest;
         }
         
         private double[][] DuplicateParticles()
@@ -421,30 +639,6 @@ namespace libPSO
             return newHistory;
 
         }
-
-        private double[][] DuplicateLocalBest()
-        {
-            double[][] newHistory = new double[numParticles][];
-            for (int i = 0; i < numParticles; i++)
-            {
-                newHistory[i] = new double[numDims];
-                for (int j = 0; j < numDims; j++)
-                {
-                    newHistory[i][j] = lBestPos[i][j];
-                }
-            }
-            return newHistory;
-
-        }
-
-        public double Optimize()
-        {
-            Init();
-            for(int i = 0; i < maxIters; i++)
-            {
-                Update();
-            }
-            return gBest;
-        }
+                
     }
 }
